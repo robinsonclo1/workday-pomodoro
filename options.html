@@ -1,0 +1,163 @@
+<html lang="en">
+  <head>
+    <title data-i18n="options_title">Workday Pomodoro Options</title>
+    
+    <style type="text/css">
+      .container {
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+      }
+      .timing-group {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: center;
+      }
+      .mb-10 {
+        margin-bottom: 10px;
+      }
+      .days {
+        display: flex;
+      }
+      .day-wrapper {        
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: center;
+        margin: 0 5px;
+      }
+      #instructions,
+      #save-wrapper {
+        display: none;
+        justify-content: center;
+      }
+      #timing-blocks-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-column-gap: 5px;
+      }
+      @media screen and (min-width: 520px) {
+        #timing-blocks-container {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media screen and (min-width: 768px) {
+        #timing-blocks-container {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+      @media screen and (min-width: 1024px) {
+        #timing-blocks-container {
+          grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+      }
+      .timing-block {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+      }
+      .regenerate-wrapper {
+        display: flex;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body class="container">
+    <h1 data-i18n="options_title">Workday Pomodoro Options</h1>
+    <p>Schedule your day to limit distractions, eliminate the need for willpower, and be your most productive self!</p>
+    <form id="options-form" class="mb-10">
+      <div class="timing-group mb-10">
+        <div class="times mb-10">
+          <label for="start-time">Start Time</label>
+          <input type="time" id="start-time" />
+          <label for="end-time">End Time</label>
+          <input type="time" id="end-time" />
+        </div>
+
+        <fieldset class="default-timings mb-10">
+          <legend>Default timings</legend>
+          <div class="timing-wrapper mb-10">
+            <label for="focus-time-length">Focus Time Length</label>
+            <input type="number" id="focus-time-length" >
+          </div>
+          <div class="timing-wrapper">
+            <label for="rest-time-length">Rest Time Length</label>
+            <input type="number" id="rest-time-length" >
+          </div>
+        </fieldset>
+        
+        <fieldset class="days mb-10">
+          <legend>Active days</legend>
+          <div class="day-wrapper">
+            <label for="monday">Monday</label>
+            <input type="checkbox" id="monday" class="day-selector" checked>
+          </div>
+          <div class="day-wrapper">
+            <label for="tuesday">Tuesday</label>
+            <input type="checkbox" id="tuesday" class="day-selector" checked>            
+          </div>
+          <div class="day-wrapper">
+            <label for="wednesday">Wednesday</label>
+            <input type="checkbox" id="wednesday" class="day-selector" checked>            
+          </div>
+          <div class="day-wrapper">
+            <label for="thursday">Thursday</label>
+            <input type="checkbox" id="thursday" class="day-selector" checked>            
+          </div>
+          <div class="day-wrapper">
+            <label for="friday">Friday</label>
+            <input type="checkbox" id="friday" class="day-selector" checked>            
+          </div>
+          <div class="day-wrapper">
+            <label for="saturday">Saturday</label>
+            <input type="checkbox" id="saturday" class="day-selector">            
+          </div>
+          <div class="day-wrapper">
+            <label for="sunday">Sunday</label>
+            <input type="checkbox" id="sunday" class="day-selector">            
+          </div>
+        </fieldset>
+        <div class="generate-wrapper">
+          <button type="button" class="btn btn-generate" id="generate">Generate Timing Blocks</button>
+        </div>
+      </div>
+
+      <div>
+        <p id="instructions">Don't forget to schedule longer breaks and lunch into this schedule!</p>
+      </div>
+
+      <div id="timing-blocks-container">
+      </div>
+
+      <div id="save-wrapper">
+        <span id="status"></span>
+        <button id="save" type="button">Save</button>
+      </div>
+
+    </form>
+    <script type="text/javascript" src="options.js"></script>
+  </body>
+
+  <template id="timing-block">
+    <fieldset id="timing-block" class="timing-block-wrapper mb-10">
+      <legend for="timing-block">Focus Block</legend>
+      <div class="timing-block">
+        <div class="timing-wrapper mb-10">
+          <label id="focus-start-label" for="focus-start-1">Focus Start</label>
+          <input type="time" id="focus-start" value="" disabled>
+        </div>
+        <div class="timing-wrapper mb-10">
+          <label id="focus-end-label" for="focus-end">Focus End/Rest Start</label>
+          <input type="time" id="focus-end" value="">
+        </div>
+        <div class="timing-wrapper mb-10">
+          <label id="rest-end-label" for="rest-end">Rest End</label>
+          <input type="time" id="rest-end" value="">
+        </div>
+      </div>
+      <div class="regenerate-wrapper">
+        <button type="button" class="btn btn-regenerate" id="regenerate">Regenerate From Here</button>
+      </div>
+    </fieldset>
+  </template>
+</html>

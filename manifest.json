@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Workday Pomodoro",
+  "description": "Continuous Pomodoro, timed automatically to your workday!",
+  "version": "1.0",
+  "icons": {
+    "16": "images/appleClock.png",
+    "32": "images/appleClock.png",
+    "48": "images/appleClock.png",
+    "128": "images/appleClock.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "images/appleClock.png",
+      "32": "images/appleClock.png",
+      "48": "images/appleClock.png",
+      "128": "images/appleClock.png"
+    }
+  },
+  "permissions": [
+    "activeTab", 
+    "scripting",
+    "storage"
+  ],
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.js"
+  }
+}
