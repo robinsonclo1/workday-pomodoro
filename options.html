@@ -8,6 +8,11 @@
         flex-flow: column;
         align-items: center;
       }
+      .header-text {
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+      }
       .timing-group {
         display: flex;
         flex-wrap: wrap;
@@ -16,6 +21,19 @@
       }
       .mb-10 {
         margin-bottom: 10px;
+      }
+      #options-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 30px 2fr;
+        grid-gap: 10px;
+      }
+      .font-override {
+        font: -webkit-control;
+      }
+      .instructions-wrapper {
+        grid-column-start: 1;
+        grid-column-end: span 2;
       }
       .days {
         display: flex;
@@ -26,12 +44,20 @@
         align-items: center;
         margin: 0 5px;
       }
+      #blocked-sites-list {
+        height: 85%;
+        width: -webkit-fill-available;
+      }
       #instructions,
       #save-wrapper {
+        grid-column-start: 1;
+        grid-column-end: span 2;
         display: none;
         justify-content: center;
       }
       #timing-blocks-container {
+        grid-column-start: 1;
+        grid-column-end: span 2;
         display: grid;
         grid-template-columns: 1fr;
         grid-column-gap: 5px;
@@ -63,15 +89,21 @@
     </style>
   </head>
   <body class="container">
-    <h1 data-i18n="options_title">Workday Pomodoro Options</h1>
-    <p>Schedule your day to limit distractions, eliminate the need for willpower, and be your most productive self!</p>
+    <div class="header-text">
+      <h1 data-i18n="options_title">Workday Pomodoro Options</h1>
+      <p>Schedule your day to limit distractions, eliminate the need for willpower, and be your most productive self!</p>
+    </div>
     <form id="options-form" class="mb-10">
+      <div class="blocked-sites-wrapper">
+        <textarea id="blocked-sites-list" class="font-override"></textarea>
+        <p>Enter one URL per line. Ex: youtube.com</p>
+      </div>
       <div class="timing-group mb-10">
         <div class="times mb-10">
           <label for="start-time">Start Time</label>
-          <input type="time" id="start-time" />
+          <input type="time" id="start-time" class="font-override"/>
           <label for="end-time">End Time</label>
-          <input type="time" id="end-time" />
+          <input type="time" id="end-time" class="font-override"/>
         </div>
 
         <fieldset class="default-timings mb-10">
@@ -122,7 +154,7 @@
         </div>
       </div>
 
-      <div>
+      <div class="instructions-wrapper">
         <p id="instructions">Don't forget to schedule longer breaks and lunch into this schedule!</p>
       </div>
 
@@ -144,15 +176,15 @@
       <div class="timing-block">
         <div class="timing-wrapper mb-10">
           <label id="focus-start-label" for="focus-start-1">Focus Start</label>
-          <input type="time" id="focus-start" value="" disabled>
+          <input type="time" id="focus-start" class="font-override" value="" disabled>
         </div>
         <div class="timing-wrapper mb-10">
           <label id="focus-end-label" for="focus-end">Focus End/Rest Start</label>
-          <input type="time" id="focus-end" value="">
+          <input type="time" id="focus-end" class="font-override" value="">
         </div>
         <div class="timing-wrapper mb-10">
           <label id="rest-end-label" for="rest-end">Rest End</label>
-          <input type="time" id="rest-end" value="">
+          <input type="time" id="rest-end" class="font-override" value="">
         </div>
       </div>
       <div class="regenerate-wrapper">

@@ -1,3 +1,4 @@
+let generatedTimes = new Set();
 document.getElementById("generate").addEventListener("click", generate);
 
 function generate() {
@@ -7,20 +8,25 @@ function generate() {
   }
 
   startTime =  new Time(document.getElementById("start-time").value.split(':'));
+  generatedTimes.clear();
   addFocusBlocks(startTime);
 }
 
 function regenerate(event) {
   blockTime = stripToTime(event.target.id);
+  focusEnd = document.getElementById("timing-block-" + blockTime).querySelectorAll('input[id^=focus-end]')[0];
   restEnd = document.getElementById("timing-block-" + blockTime).querySelectorAll('input[id^=rest-end]')[0];
+  oldFocusEnd = stripToTime(focusEnd.id);
   oldRestEnd = stripToTime(restEnd.id);
+  focusEndTime = new Time(focusEnd.value.split(':'));
   startTime = new Time(restEnd.value.split(':'));
   
+  removeGeneratedTimes(blockTime)
+  updateInputAndLabelId(oldFocusEnd, focusEndTime.toString(false), "focus-end");
   updateInputAndLabelId(oldRestEnd, startTime.toString(false), "rest-end");
   removeFocusBlocks(blockTime);
   addFocusBlocks(startTime);
 
-  // @todo, also do the focus end/rest start time
   // @todo verify focus & rest end are after focus start
 }
 
@@ -32,6 +38,7 @@ function addFocusBlocks(startTime) {
   restDuration = parseInt(document.getElementById("rest-time-length").value);
 
   iterationTime = startTime;
+  generatedTimes.add("focus-start-" + iterationTime.toString(false));
 
   // @todo, end focus directly at end time and don't go over
   while (isEarlier(iterationTime, endTime)) {
@@ -46,9 +53,41 @@ function addFocusBlocks(startTime) {
     timingBlocksTemplate.getElementById(newRegenButtonId).addEventListener("click", regenerate);
 
     duplicateFormsAndLabels("focus-start");
+
     iterationTime.addTime(focusDuration);
     duplicateFormsAndLabels("focus-end");
+
     iterationTime.addTime(restDuration);
+    duplicateFormsAndLabels("rest-end");
+
+    timingBlocksContainer.append(timingBlocksTemplate);
+  }
+}
+
+function addFocusBlocksFromArray(times) {
+  document.getElementById("instructions").style.display = "flex";
+  document.getElementById("save-wrapper").style.display = "flex";
+  timingBlocksContainer = document.getElementById("timing-blocks-container");
+
+  for (i=0; i<times.length; i+=3) {
+    
+    timingBlocksTemplate = document.getElementById("timing-block").content.cloneNode(true);
+
+    newTimingBlockId = "timing-block-" + stripToTime(times[i][1]);
+    timingBlocksTemplate.getElementById("timing-block").id = newTimingBlockId;
+    timingBlocksTemplate.querySelector("#" + newTimingBlockId + " > legend:first-of-type").setAttribute("for", newTimingBlockId);
+    
+    newRegenButtonId = "regenerate-" + stripToTime(times[i][1]);
+    timingBlocksTemplate.getElementById("regenerate").id = newRegenButtonId;
+    timingBlocksTemplate.getElementById(newRegenButtonId).addEventListener("click", regenerate);
+    
+    iterationTime = new Time(times[i][1].split(':'));
+    duplicateFormsAndLabels("focus-start");
+    
+    iterationTime = new Time(times[i+1][1].split(':'));
+    duplicateFormsAndLabels("focus-end");
+    
+    iterationTime = new Time(times[i+2][1].split(':'));
     duplicateFormsAndLabels("rest-end");
 
     timingBlocksContainer.append(timingBlocksTemplate);
@@ -65,6 +104,14 @@ function removeFocusBlocks(oldTime) {
       }
     }
   });
+}
+
+function removeGeneratedTimes(oldTime) {
+  for (savedTimes of Array.from(generatedTimes)) {
+    if (stripToTime(savedTimes) > oldTime) {
+      generatedTimes.delete(savedTimes);
+    }
+  }
 }
 
 class Time {
@@ -103,6 +150,7 @@ function isEarlier(early, late) {
 
 function updateInputAndLabelId(oldTime, newTime, oldIdString) {
   newIdString = oldIdString + "-" + newTime
+  generatedTimes.add(newIdString);
   document.getElementById(oldIdString + "-" + oldTime).id = newIdString;
   newLabelId = oldIdString + "-label-" + newTime;
   document.getElementById(oldIdString + "-label-" + oldTime).id = newLabelId;
@@ -111,6 +159,7 @@ function updateInputAndLabelId(oldTime, newTime, oldIdString) {
 
 function duplicateFormsAndLabels(id) {
   newInputId = id + "-" + iterationTime.toString(false);
+  generatedTimes.add(newInputId);
   timingBlocksTemplate.getElementById(id).id = newInputId;
   timingBlocksTemplate.getElementById(newInputId).setAttribute("value", iterationTime.toString(true));
   newLabelId = id + "-label-" + iterationTime.toString(false);
@@ -122,7 +171,6 @@ function stripToTime(id) {
   return id.replace(/\D/g,'');
 }
 
-// Saves options to chrome.storage
 function saveTimingOptions() {
   var startTime = document.getElementById('start-time').value;
   var endTime = document.getElementById('end-time').value;
@@ -137,8 +185,11 @@ function saveTimingOptions() {
   var friday = document.getElementById('friday').checked;
   var saturday = document.getElementById('saturday').checked;
   var sunday = document.getElementById('sunday').checked;
-
-
+  var times = [];
+  for(id of Array.from(generatedTimes)) {
+    times.push([id, document.getElementById(id).value]);
+  }
+  
   chrome.storage.sync.set({
     startTime: startTime,
     endTime: endTime,
@@ -150,7 +201,8 @@ function saveTimingOptions() {
     thursday: thursday,
     friday: friday,
     saturday: saturday,
-    sunday: sunday
+    sunday: sunday,
+    times: times
   }, function() {
     // Update status to let user know options were saved.
     var status = document.getElementById('status');
@@ -173,7 +225,8 @@ function restoreOptions() {
     thursday: true,
     friday: true,
     saturday: false,
-    sunday: false
+    sunday: false,
+    times: []
   }, function(items) {
     document.getElementById('start-time').value = items.startTime;
     document.getElementById('end-time').value = items.endTime;
@@ -187,8 +240,11 @@ function restoreOptions() {
     document.getElementById('friday').checked = items.friday;
     document.getElementById('saturday').checked = items.saturday;
     document.getElementById('sunday').checked = items.sunday;
+    if(items.times.length > 0) {
+      addFocusBlocksFromArray(items.times);
+    }
   });
 }
+
 document.addEventListener('DOMContentLoaded', restoreOptions);
-document.getElementById('save').addEventListener('click',
-  saveTimingOptions);
+document.getElementById('save').addEventListener('click', saveTimingOptions);
