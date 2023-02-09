@@ -82,9 +82,30 @@
         flex-direction: column;
         align-items: flex-end;
       }
+      .timing-wrapper {
+        text-align: right;
+      }
       .regenerate-wrapper {
         display: flex;
         justify-content: center;
+      }
+      input:invalid {
+        border-color: #900;
+        background-color: #fdd;
+      }
+      .error {
+        width: 100%;
+        padding: 0;
+        display: block;
+        font-size: 80%;
+        color: white;
+        background-color: #900;
+        border-radius: 0 0 5px 5px;
+        box-sizing: border-box;
+      }
+
+      .error.active {
+        padding: 0.3em;
       }
     </style>
   </head>
@@ -93,7 +114,7 @@
       <h1 data-i18n="options_title">Workday Pomodoro Options</h1>
       <p>Schedule your day to limit distractions, eliminate the need for willpower, and be your most productive self!</p>
     </div>
-    <form id="options-form" class="mb-10">
+    <form id="options-form" class="mb-10" novalidate>
       <div class="blocked-sites-wrapper">
         <textarea id="blocked-sites-list" class="font-override"></textarea>
         <p>Enter one URL per line. Ex: youtube.com</p>
@@ -163,7 +184,7 @@
 
       <div id="save-wrapper">
         <span id="status"></span>
-        <button id="save" type="button">Save</button>
+        <button id="save" type="submit">Save</button>
       </div>
 
     </form>
@@ -177,14 +198,17 @@
         <div class="timing-wrapper mb-10">
           <label id="focus-start-label" for="focus-start-1">Focus Start</label>
           <input type="time" id="focus-start" class="font-override" value="" disabled>
+          <span class="error" aria-live="polite"></span>
         </div>
         <div class="timing-wrapper mb-10">
           <label id="focus-end-label" for="focus-end">Focus End/Rest Start</label>
           <input type="time" id="focus-end" class="font-override" value="">
+          <span class="error" aria-live="polite"></span>
         </div>
         <div class="timing-wrapper mb-10">
           <label id="rest-end-label" for="rest-end">Rest End</label>
           <input type="time" id="rest-end" class="font-override" value="">
+          <span class="error" aria-live="polite"></span>
         </div>
       </div>
       <div class="regenerate-wrapper">
