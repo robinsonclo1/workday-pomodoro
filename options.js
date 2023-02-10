@@ -20,14 +20,18 @@ function regenerate(event) {
   oldRestEnd = stripToTime(restEnd.id);
   focusEndTime = new Time(focusEnd.value.split(':'));
   startTime = new Time(restEnd.value.split(':'));
-  
-  removeGeneratedTimes(blockTime)
-  updateInputAndLabelId(oldFocusEnd, focusEndTime.toString(false), "focus-end");
-  updateInputAndLabelId(oldRestEnd, startTime.toString(false), "rest-end");
-  removeFocusBlocks(blockTime);
-  addFocusBlocks(startTime);
 
-  // @todo verify focus & rest end are after focus start
+  isTimingCorrect = verifyTimingIntegrity();
+  if (isTimingCorrect) {
+    document.getElementById('save').removeAttribute('disabled');
+    removeGeneratedTimes(blockTime)
+    updateInputAndLabelId(oldFocusEnd, focusEndTime.toString(false), "focus-end");
+    updateInputAndLabelId(oldRestEnd, startTime.toString(false), "rest-end");
+    removeFocusBlocks(blockTime);
+    addFocusBlocks(startTime);
+  } else {
+    document.getElementById('save').setAttribute('disabled', '');
+  }
 }
 
 function addFocusBlocks(startTime) {
@@ -171,6 +175,43 @@ function stripToTime(id) {
   return id.replace(/\D/g,'');
 }
 
+function verifyTimingIntegrity() {
+  timingBlocksContainer = document.getElementById("timing-blocks-container");
+  for (value of [...timingBlocksContainer.childNodes]) {
+    if (typeof value.id != 'undefined') {
+      focusStart = value.querySelectorAll('input[id^=focus-start]')[0];
+      focusEnd = value.querySelectorAll('input[id^=focus-end]')[0];
+      restEnd = value.querySelectorAll('input[id^=rest-end]')[0];
+      if (focusStart.value > focusEnd.value) {
+        focusEnd.setCustomValidity("Focus end must occur after focus start!");
+        focusEnd.classList.add("invalid");
+        focusEnd.nextElementSibling.textContent = "Focus end must occur after focus start!";
+        focusEnd.nextElementSibling.className = "error active";
+        focusEnd.focus();
+        return false;
+      } else if (focusEnd.value > restEnd.value) {
+        restEnd.setCustomValidity("Rest end must occur after focus end!");
+        restEnd.classList.add("invalid");
+        restEnd.nextElementSibling.textContent = "Rest end must occur after focus end!";
+        restEnd.nextElementSibling.className = "error active";
+        restEnd.focus();
+        return false;
+      } else {
+        focusEnd.setCustomValidity("");
+        focusEnd.classList.remove("invalid");
+        focusEnd.nextElementSibling.textContent = "";
+        focusEnd.nextElementSibling.className = "error";
+
+        restEnd.setCustomValidity("");
+        restEnd.classList.remove("invalid");
+        restEnd.nextElementSibling.textContent = "";
+        restEnd.nextElementSibling.className = "error";
+      }
+    }
+  }
+  return true;
+}
+
 function saveTimingOptions() {
   var startTime = document.getElementById('start-time').value;
   var endTime = document.getElementById('end-time').value;
@@ -186,8 +227,24 @@ function saveTimingOptions() {
   var saturday = document.getElementById('saturday').checked;
   var sunday = document.getElementById('sunday').checked;
   var times = [];
+  var onOff = [];
+  var currentOnOff = [];
+
   for(id of Array.from(generatedTimes)) {
+    var time = new Time(document.getElementById(id).value.split(":"));
+    console.log(id);
     times.push([id, document.getElementById(id).value]);
+    if (id.includes("focus-start")) {
+      currentOnOff.push(true, time)
+    } else if (id.includes("focus-end")) {
+      currentOnOff.push(time)
+      onOff.push(currentOnOff)
+      currentOnOff = [false, time]
+    } else if (id.includes("rest-end")) {
+      currentOnOff.push(time)
+      onOff.push(currentOnOff)
+      currentOnOff = [];
+    }
   }
   
   chrome.storage.sync.set({
@@ -202,7 +259,8 @@ function saveTimingOptions() {
     friday: friday,
     saturday: saturday,
     sunday: sunday,
-    times: times
+    times: times,
+    onOff: onOff
   }, function() {
     // Update status to let user know options were saved.
     var status = document.getElementById('status');
@@ -248,3 +306,48 @@ function restoreOptions() {
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('save').addEventListener('click', saveTimingOptions);
+
+"use strict";
+(() => {
+const modified_inputs = new Set;
+const defaultValue = "defaultValue";
+// store default values
+addEventListener("beforeinput", (evt) => {
+    const target = evt.target;
+    if (!(defaultValue in target || defaultValue in target.dataset)) {
+        target.dataset[defaultValue] = ("" + (target.value || target.textContent)).trim();
+    }
+});
+// detect input modifications
+addEventListener("input", (evt) => {
+    const target = evt.target;
+    let original;
+    if (defaultValue in target) {
+        original = target[defaultValue];
+    } else {
+        original = target.dataset[defaultValue];
+    }
+    if (original !== ("" + (target.value || target.textContent)).trim()) {
+        if (!modified_inputs.has(target)) {
+            modified_inputs.add(target);
+        }
+    } else if (modified_inputs.has(target)) {
+        modified_inputs.delete(target);
+    }
+});
+// clear modified inputs upon form submission
+addEventListener("submit", (evt) => {
+    modified_inputs.clear();
+    // to prevent the warning from happening, it is advisable
+    // that you clear your form controls back to their default
+    // state with evt.target.reset() or form.reset() after submission
+});
+// warn before closing if any inputs are modified
+addEventListener("beforeunload", (evt) => {
+    if (modified_inputs.size) {
+        const unsaved_changes_warning = "Changes you made may not be saved.";
+        evt.returnValue = unsaved_changes_warning;
+        return unsaved_changes_warning;
+    }
+});
+})();
