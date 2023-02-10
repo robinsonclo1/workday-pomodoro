@@ -1,65 +1,74 @@
-console.log('hi')
-
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.action.setBadgeText({
-    text: "OFF",
-  });
-  
-  chrome.storage.sync.get({
-    times: [],
-    onOff: []
-  }, function(items) {
-    items.times;
-    var today = new Date();
-    for (timeframe of items.onOff) {
-      var start = new Date();
-      var end = new Date();
-      start.setHours(timeframe[1].hour, timeframe[1].minute, 0);
-      end.setHours(timeframe[2].hour, timeframe[2].minute, 0);
+  setOnOff()
 
-      if (start.getTime() <= today.getTime() && end.getTime() > today.getTime()) {
-        console.log("currentTime", today)
-      }
-    }
-    console.log(items.onOff)
-    } 
-  )
+  setInterval(function() {
+    setOnOff()
+  }, 60 * 1000);
 });
 
 
-chrome.action.onClicked.addListener(function(tab) {
-  // console.log('clicked')
-  chrome.action.setBadgeText({
-    text: "on",
-  });
-  timeRemaining();
-});
+// chrome.action.onClicked.addListener(function(tab) {
+//   // console.log('clicked')
+//   chrome.action.setBadgeText({
+//     text: "on",
+//   });
+// });
 
-// function offOnCycle () {
-//   isOn = true;
-//   if (isOn) {
-//     chrome.action.setBadgeText({
-//       text: "on",
-//     });
-//   }
-// }
+function setOnOff() {
+  var cycle = getCurrentCycle()
+  // console.log(cycle);
+  // if (cycle) {
+  //   console.log(cycle);
+  // }
+}
 
-function timeRemaining() {
+async function getCurrentCycle() {
   // console.log('hi')
-  chrome.storage.sync.get({
-    times: [],
-    onOff: []
-  }, function(items) {
-    items.times;
-    var today = new Date();
-    for (timeframe of items.onOff) {
-      console.log(timeframe[1])
-      console.log(today.getTime())
-      if (timeframe[1].date >= today && timeframe[2].date < today) {
-        console.log("currentTime", today)
+  var p = new Promise(function(resolve, reject){
+    chrome.storage.sync.get({
+      times: [],
+      onOff: []
+    }, function(items) {
+      var today = new Date();
+      for (timeframe of items.onOff) {
+        var start = new Date();
+        var end = new Date();
+        start.setHours(timeframe[1].hour, timeframe[1].minute, 0);
+        end.setHours(timeframe[2].hour, timeframe[2].minute, 0);
+
+        if (start.getTime() <= today.getTime() && end.getTime() > today.getTime()) {
+          if (timeframe[0]) {
+            chrome.action.setBadgeText({
+              text: "ON",
+            });
+            // console.log('temp on')
+            return
+          } else {
+            chrome.action.setBadgeText({
+              text: "OFF",
+            });
+            // console.log('temp off')
+            return
+          }
+        }
       }
-    }
-    console.log(items.onOff)
-    } 
-  )
+      chrome.action.setBadgeText({
+        text: "OFF",
+      });
+      // console.log('off for the night')
+    })
+  })
+
+  const configOut = await p;
 } 
+
+// async function mainFuction() {
+//   var p = new Promise(function(resolve, reject){
+//       chrome.storage.sync.get({"disableautoplay": true}, function(options){
+//           resolve(options.disableautoplay);
+//       })
+//   });
+
+//   const configOut = await p;
+//   console.log(configOut);
+// }

@@ -1,6 +1,5 @@
 let generatedTimes = new Set();
 document.getElementById("generate").addEventListener("click", generate);
-// document.getElementById("times").addEventListener("click", convertToDateTime);
 
 function generate() {
   timingBlocksContainer = document.getElementById("timing-blocks-container");
@@ -124,12 +123,10 @@ class Time {
   minute;
   hourStr;
   minuteStr;
-  date;
 
   constructor([hour, minute]) {
     this.hour = parseInt(hour, 10);
     this.minute = parseInt(minute, 10);
-    this.setDate();
     this.updateStrings();
   }
 
@@ -138,17 +135,11 @@ class Time {
     this.hour = (this.hour + hourRemainder) % 24;
     this.minute = (this.minute + time) % 60;
     this.updateStrings();
-    this.setDate();
   }
 
   updateStrings() {
     this.hourStr = this.hour < 10 ? "0" + this.hour : this.hour;
     this.minuteStr = this.minute < 10 ? "0" + this.minute : this.minute;
-  }
-
-  setDate() {
-    this.date = new Date();
-    this.date.setHours(this.hour, this.minute, 0);
   }
 
   toString(hasColon) {
