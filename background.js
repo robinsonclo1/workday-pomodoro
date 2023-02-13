@@ -6,27 +6,9 @@ chrome.runtime.onInstalled.addListener(() => {
   }, 60 * 1000);
 });
 
-
-// chrome.action.onClicked.addListener(function(tab) {
-//   // console.log('clicked')
-//   chrome.action.setBadgeText({
-//     text: "on",
-//   });
-// });
-
-function setOnOff() {
-  var cycle = getCurrentCycle()
-  // console.log(cycle);
-  // if (cycle) {
-  //   console.log(cycle);
-  // }
-}
-
-async function getCurrentCycle() {
-  // console.log('hi')
+async function setOnOff() {
   var p = new Promise(function(resolve, reject){
     chrome.storage.sync.get({
-      times: [],
       onOff: []
     }, function(items) {
       var today = new Date();
@@ -41,13 +23,13 @@ async function getCurrentCycle() {
             chrome.action.setBadgeText({
               text: "ON",
             });
-            // console.log('temp on')
+            executeInAllBlockedTabs('block');
             return
           } else {
             chrome.action.setBadgeText({
               text: "OFF",
             });
-            // console.log('temp off')
+            executeInAllBlockedTabs('unblock');
             return
           }
         }
@@ -55,20 +37,87 @@ async function getCurrentCycle() {
       chrome.action.setBadgeText({
         text: "OFF",
       });
-      // console.log('off for the night')
+      executeInAllBlockedTabs('unblock');
     })
   })
 
   const configOut = await p;
 } 
 
-// async function mainFuction() {
-//   var p = new Promise(function(resolve, reject){
-//       chrome.storage.sync.get({"disableautoplay": true}, function(options){
-//           resolve(options.disableautoplay);
-//       })
-//   });
+function executeInAllBlockedTabs(action) {
+  chrome.windows.getAll({populate: true}, function (windows) {
+    var tabs;
+    for(var i in windows) {
+      tabs = windows[i].tabs;
+      for(var tab in tabs) {
+        executeInTabIfBlocked(action, tabs[tab]);
+      }
+    }
+  });
+}
 
-//   const configOut = await p;
-//   console.log(configOut);
-// }
+function executeInTabIfBlocked(action, tab) {
+  var file = "content_scripts/" + action + ".js", location;
+  location = tab.url.split('://');
+  location = parseLocation(location[1]);
+  
+  chrome.storage.sync.get({
+    siteList: []
+  }, function(items) {
+    
+    for(var site in items.siteList) {
+      listedPattern = parseLocation(items.siteList[site]);
+      if(locationsMatch(location, listedPattern)) {
+        chrome.scripting.executeScript({
+          target: {tabId: tab.id, allFrames: true},
+          files: [file],
+        });
+      }
+    }
+  })
+}
+function locationsMatch(location, listedPattern) {
+  return domainsMatch(location.domain, listedPattern.domain) &&
+    pathsMatch(location.path, listedPattern.path);
+}
+
+function pathsMatch(test, against) {
+  return !against || test.substr(0, against.length) == against;
+}
+
+
+function parseLocation(location) {
+  var components = location.split('/');
+  return {domain: components.shift(), path: components.join('/')};
+}
+
+function domainsMatch(test, against) {
+  /*
+    google.com ~> google.com: case 1, pass
+    www.google.com ~> google.com: case 3, pass
+    google.com ~> www.google.com: case 2, fail
+    google.com ~> yahoo.com: case 3, fail
+    yahoo.com ~> google.com: case 2, fail
+    bit.ly ~> goo.gl: case 2, fail
+    mail.com ~> gmail.com: case 2, fail
+    gmail.com ~> mail.com: case 3, fail
+  */
+
+  // Case 1: if the two strings match, pass
+  if(test === against) {
+    return true;
+  } else {
+    var testFrom = test.length - against.length - 1;
+
+    // Case 2: if the second string is longer than first, or they are the same
+    // length and do not match (as indicated by case 1 failing), fail
+    if(testFrom < 0) {
+      return false;
+    } else {
+      // Case 3: if and only if the first string is longer than the second and
+      // the first string ends with a period followed by the second string,
+      // pass
+      return test.substr(testFrom) === '.' + against;
+    }
+  }
+}
