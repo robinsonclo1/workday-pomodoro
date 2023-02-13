@@ -213,6 +213,7 @@ function verifyTimingIntegrity() {
 }
 
 function saveTimingOptions() {
+  var siteList = document.getElementById('site-list').value.split(/\r?\n/);
   var startTime = document.getElementById('start-time').value;
   var endTime = document.getElementById('end-time').value;
   var focusTimeLength = document.getElementById('focus-time-length').value;
@@ -248,6 +249,7 @@ function saveTimingOptions() {
   }
   
   chrome.storage.sync.set({
+    siteList: siteList,
     startTime: startTime,
     endTime: endTime,
     focusTimeLength: focusTimeLength,
@@ -273,6 +275,7 @@ function saveTimingOptions() {
 
 function restoreOptions() {
   chrome.storage.sync.get({
+    siteList: [],
     startTime: "09:00",
     endTime: "17:00",
     focusTimeLength: 25,
@@ -286,6 +289,7 @@ function restoreOptions() {
     sunday: false,
     times: []
   }, function(items) {
+    document.getElementById('site-list').value = items.siteList.join("\n");
     document.getElementById('start-time').value = items.startTime;
     document.getElementById('end-time').value = items.endTime;
     document.getElementById('focus-time-length').value = items.focusTimeLength;

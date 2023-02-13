@@ -20,10 +20,19 @@
   "permissions": [
     "activeTab", 
     "scripting",
-    "storage"
+    "storage",
+    "tabs",
+    "<all_urls>",
+    "*://*/*"
   ],
   "options_page": "options.html",
   "background": {
     "service_worker": "background.js"
-  }
+  },
+  "host_permissions": [
+    "https://*/*",
+    "http://*/",
+    "*://*/*",
+    "<all_urls>"
+  ]
 }
